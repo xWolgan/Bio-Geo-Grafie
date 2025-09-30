@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../js/index.js"],
+  "sourcesContent": ["/**\r\n * /!\\ This file is auto-generated.\r\n *\r\n * This is the entry point of your standalone application.\r\n *\r\n * There are multiple tags used by the editor to inject code automatically:\r\n *     - `wle:auto-imports:start` and `wle:auto-imports:end`: The list of import statements\r\n *     - `wle:auto-register:start` and `wle:auto-register:end`: The list of component to register\r\n */\r\n\r\n/* wle:auto-imports:start */\n/* wle:auto-imports:end */\r\n\r\nexport default function(engine) {\r\n/* wle:auto-register:start */\n/* wle:auto-register:end */\r\n}\r\n"],
+  "mappings": ";AAae,SAAR,WAAiB,QAAQ;AAGhC;",
+  "names": []
+}
