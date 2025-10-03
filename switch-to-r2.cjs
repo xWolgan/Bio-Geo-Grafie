@@ -20,7 +20,8 @@ let content = fs.readFileSync(APP_FILE, 'utf8');
 const originalLine = `await engine.loadMainScene(\`\${Constants.ProjectName}.bin\`);`;
 const r2Line = `await engine.loadMainSceneFromBuffer({
     buffer: await (await fetch(\`${R2_BASE_URL}\${Constants.ProjectName}.bin\`)).arrayBuffer(),
-    filename: \`\${Constants.ProjectName}.bin\`
+    filename: \`\${Constants.ProjectName}.bin\`,
+    baseURL: ''
   });`;
 
 if (content.includes(originalLine)) {
