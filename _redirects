@@ -1,2 +1,2 @@
-# No redirects - serve all files as-is
-# This file ensures Cloudflare Pages doesn't redirect anything
+# No redirects - serve all files directly
+# This ensures .js, .wasm, .bin files are served as-is
