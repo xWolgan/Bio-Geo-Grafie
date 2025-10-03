@@ -18,13 +18,11 @@ let content = fs.readFileSync(APP_FILE, 'utf8');
 // Replace local .bin path with R2 URL, but use loadMainSceneFromBuffer
 // This allows scene from R2 while bundle stays on Cloudflare Pages
 const originalLine = `await engine.loadMainScene(\`\${Constants.ProjectName}.bin\`);`;
-const r2Line = `await engine.loadMainSceneFromBuffer(
-    await (await fetch(\`${R2_BASE_URL}\${Constants.ProjectName}.bin\`)).arrayBuffer(),
-    \`\${Constants.ProjectName}.bin\`,
-    {
-      baseURL: window.location.origin + '/'
-    }
-  );`;
+const r2Line = `await engine.loadMainSceneFromBuffer({
+    buffer: await (await fetch(\`${R2_BASE_URL}\${Constants.ProjectName}.bin\`)).arrayBuffer(),
+    filename: \`\${Constants.ProjectName}.bin\`,
+    baseURL: window.location.origin + '/'
+  });`;
 
 if (content.includes(originalLine)) {
   content = content.replace(originalLine, r2Line);
