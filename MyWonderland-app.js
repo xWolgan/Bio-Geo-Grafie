@@ -44,7 +44,7 @@ if (document.readyState === "loading") {
   setupButtonsXR();
 }
 try {
-  await engine.loadMainScene(`${Constants.ProjectName}.bin`);
+  await engine.loadMainScene(`https://pub-c6ac418601d24ff1b2b716ad48afc9ce.r2.dev/${Constants.ProjectName}.bin`);
 } catch (e) {
   console.error(e);
   window.alert(`Failed to load ${Constants.ProjectName}.bin:`, e);

@@ -4,6 +4,10 @@
 *.webm
 *.avi
 
+# Large .bin files hosted on R2 (>25MB for Cloudflare Pages)
+Bio-Geo-Grafie_project.bin
+Bio-Geo-Grafie_project-textures.bin
+
 # Wrangler local dev files
 .wrangler/
 
