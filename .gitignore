@@ -11,11 +11,10 @@ Bio-Geo-Grafie_project-textures.bin
 # Wrangler local dev files
 .wrangler/
 
-# Node modules
-node_modules/
-
 # Test files
 test-*.mp4
+
+# Note: node_modules/ is INCLUDED in deploy folder (needed for runtime)
 
 # Large sky images
 images/daysky_HD.png
