@@ -1,0 +1,155 @@
+==================================================
+    BIO-GEO-GRAFIE VR GALLERY PACKAGE
+    Version: 1.0 - Windows Edition
+==================================================
+
+PACKAGE SIZE: ~3.1 GB (after cleanup)
+
+--------------------------------------------------
+LAUNCHER FILES (3 files - choose one):
+--------------------------------------------------
+
+1. BIO_GEO_GRAFIE_START.bat
+   - Main launcher with nice interface
+   - Auto-detects Python or uses PowerShell
+   - RECOMMENDED for most users
+
+2. INSTALL_AND_RUN.bat  
+   - Downloads portable Python if needed
+   - No system modifications
+   - Use if first launcher doesn't work
+
+3. START_HERE_WINDOWS.txt
+   - Simple instructions for users
+   - Troubleshooting guide
+   - Read this first if unsure
+
+--------------------------------------------------
+CORE APPLICATION FILES:
+--------------------------------------------------
+
+WEBGL/WASM Runtime:
+- WonderlandRuntime.wasm (11 MB) - Main engine
+- WonderlandRuntime.js - JavaScript loader
+- WonderlandRuntime-threads.* - Threading support
+- WonderlandRuntime-LoadingScreen.bin - Loading screen
+
+Project Files:
+- index.html - Entry point
+- Bio-geo-grafie_project.wlp.bin (5.2 MB) - Scene data
+- Bio-geo-grafie_project.wlp-bundle.js - Components
+- Bio-geo-grafie_project.wlp-app.js - Application logic
+
+Texture/Asset Bundles:
+- Bio-Geo-Grafie_project.bin (91 MB) - 3D models
+- Bio-geo-grafie_project.wlp-textures.bin (5 MB)
+- Bio-Geo-Grafie_project-textures.bin (42 MB)
+
+3D Models:
+- space_model_v10_tiled.obj - Gallery space mesh
+- space_model_v10 (5).obj - Alternative mesh
+
+--------------------------------------------------
+MEDIA FOLDERS:
+--------------------------------------------------
+
+images/ (108 MB total)
+- Sky textures (day/night)
+- Environment maps
+- Location images (Lodz, Mombasa)
+- All textures used by materials
+
+video/ (1.6 GB total)
+- ForgottenPlaces_panoramic.mp4 (580 MB)
+- In_Memory_of_Me_clip.mp4 (286 MB)
+- ulan_klip.mp4 (340 MB)
+- jezdziec_clip.mp4 (146 MB)
+- The_Last_Parade_clip.mp4 (161 MB)
+- Powitanie_1klip.mp4 (133 MB)
+
+Music/ (5 audio files)
+- 1.mp3 through 5.mp3
+- Ambient background tracks
+
+sfx/ (2 files)
+- click.wav
+- unclick.wav
+- UI sound effects
+
+--------------------------------------------------
+ADDITIONAL VIDEOS IN ROOT:
+--------------------------------------------------
+
+- Sequence 01.mp4 (519 MB)
+- Sequence 01_1.mp4 (406 MB)
+(These appear to be different from video folder)
+
+--------------------------------------------------
+SUPPORT FOLDERS:
+--------------------------------------------------
+
+node_modules/ (580 MB)
+- Wonderland Engine API
+- Runtime dependencies
+- DO NOT DELETE
+
+locale/
+- Language files
+- Localization support
+
+--------------------------------------------------
+CLEANUP PERFORMED:
+--------------------------------------------------
+
+Removed duplicates:
+- 10 duplicate sky images from root (108 MB)
+- 2 duplicate videos from root (866 MB)
+- 9 obsolete launcher scripts
+- 4 GitHub deployment files
+
+Space saved: ~974 MB
+
+--------------------------------------------------
+KNOWN ISSUES:
+--------------------------------------------------
+
+1. VIDEO PATH MISMATCH:
+   - Code references '/static/video-7200.mp4'
+   - No such file exists
+   - Videos may not play without path correction
+
+2. LARGE FILE SIZES:
+   - Total package is 3.1 GB
+   - Videos alone are 2.5 GB
+   - Consider video compression for distribution
+
+--------------------------------------------------
+DISTRIBUTION RECOMMENDATIONS:
+--------------------------------------------------
+
+1. For testing as-is:
+   - ZIP this entire folder
+   - Share via file transfer service
+   - Users extract and run launcher
+
+2. For wider distribution:
+   - Compress videos (target <100MB each)
+   - Use video streaming service
+   - Create installer with NSIS/InnoSetup
+
+3. For production:
+   - Fix video path references in code
+   - Optimize texture sizes
+   - Implement video streaming
+
+--------------------------------------------------
+TECHNICAL REQUIREMENTS:
+--------------------------------------------------
+
+- Windows 7 or newer
+- 4 GB RAM minimum
+- WebGL2 capable browser
+- ~3.5 GB disk space
+- Python or PowerShell for server
+
+==================================================

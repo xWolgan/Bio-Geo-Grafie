@@ -7597,7 +7597,6 @@ __decorate19([
 import { Component as Component29, Property as Property2 } from "@wonderlandengine/api";
 var AmbientAudio = class extends AudioSource {
   init() {
-    super.init();
     this.isFading = false;
     this.fadeStartVolume = this.volume;
     this.fadeTargetVolume = this.volume;
@@ -7900,15 +7899,104 @@ __publicField(ExtendedWasdControls, "Properties", {
   lockY: Property3.bool(false)
 });
 
+// js/interaction-manager.js
+import { Component as Component31 } from "@wonderlandengine/api";
+var InteractionManager = class extends Component31 {
+  init() {
+    window.interactionManager = this;
+    this.currentInteraction = null;
+    this.isInteractionActive = false;
+    this.allInteractiveObjects = [];
+    console.log("[InteractionManager] Initialized - managing global interactions");
+  }
+  /**
+   * Register an interactive object with the manager
+   */
+  registerInteractiveObject(obj) {
+    if (!this.allInteractiveObjects.includes(obj)) {
+      this.allInteractiveObjects.push(obj);
+      console.log("[InteractionManager] Registered interactive object:", obj.object.name);
+    }
+  }
+  /**
+   * Request to start an interaction
+   * Disables all other objects when approved
+   */
+  requestInteraction(interactiveObject) {
+    if (!this.isInteractionActive) {
+      this.currentInteraction = interactiveObject;
+      this.isInteractionActive = true;
+      this.allInteractiveObjects.forEach((obj) => {
+        if (obj !== interactiveObject) {
+          obj.interactionEnabled = false;
+          console.log("[InteractionManager] Disabled interactions for:", obj.object.name);
+        }
+      });
+      console.log("[InteractionManager] Interaction started for:", interactiveObject.object.name);
+      console.log("[InteractionManager] All other objects disabled");
+      return true;
+    } else {
+      console.log("[InteractionManager] ERROR: Interaction already active");
+      return false;
+    }
+  }
+  /**
+   * Mark an interaction as complete
+   * Re-enables all other objects
+   */
+  endInteraction(interactiveObject) {
+    if (this.currentInteraction === interactiveObject) {
+      console.log("[InteractionManager] Interaction ended for:", interactiveObject.object.name);
+      this.allInteractiveObjects.forEach((obj) => {
+        if (obj !== interactiveObject) {
+          obj.interactionEnabled = true;
+          console.log("[InteractionManager] Re-enabled interactions for:", obj.object.name);
+        }
+      });
+      this.currentInteraction = null;
+      this.isInteractionActive = false;
+      console.log("[InteractionManager] All objects re-enabled");
+    }
+  }
+  /**
+   * Emergency stop (if needed)
+   */
+  forceStopAll() {
+    if (this.currentInteraction) {
+      console.log("[InteractionManager] Emergency stop - re-enabling all objects");
+      this.allInteractiveObjects.forEach((obj) => {
+        obj.interactionEnabled = true;
+      });
+      this.currentInteraction = null;
+      this.isInteractionActive = false;
+    }
+  }
+  /**
+   * Check if any interaction is currently active
+   */
+  isAnyInteractionActive() {
+    return this.isInteractionActive;
+  }
+  /**
+   * Get the currently active interaction object
+   */
+  getCurrentInteraction() {
+    return this.currentInteraction;
+  }
+};
+__publicField(InteractionManager, "TypeName", "interaction-manager");
+__publicField(InteractionManager, "Properties", {});
+
 // js/interactive-object.js
-import { Component as Component31, Property as Property4 } from "@wonderlandengine/api";
-var InteractiveObject = class extends Component31 {
+import { Component as Component32, Property as Property4 } from "@wonderlandengine/api";
+var InteractiveObject = class extends Component32 {
   init() {
     this.isTriggered = false;
     this.isPlaying = false;
     this.hasBeenPlayed = false;
     this.videoEndTime = 0;
     this.disappearProgress = 0;
+    this.interactionEnabled = true;
     this.originalScale = new Float32Array(3);
     this.originalPosition = new Float32Array(3);
     this.playerPos = new Float32Array(3);
@@ -7918,6 +8006,11 @@ var InteractiveObject = class extends Component31 {
     console.log("[InteractiveObject] Initialized");
   }
   start() {
+    if (window.interactionManager) {
+      window.interactionManager.registerInteractiveObject(this);
+    } else {
+      console.warn("[InteractiveObject] No InteractionManager found - add it to scene!");
+    }
     if (!this.playerObject) {
       console.error("[InteractiveObject] Player object not assigned!");
       return;
@@ -7966,7 +8059,7 @@ var InteractiveObject = class extends Component31 {
     this.playerObject.getPositionWorld(this.playerPos);
     this.object.getPositionWorld(this.objectPos);
     const distance2 = this.calculateDistance(this.playerPos, this.objectPos);
-    if (!this.isTriggered && distance2 <= this.triggerDistance) {
+    if (!this.isTriggered && this.interactionEnabled && distance2 <= this.triggerDistance) {
       console.log(`[InteractiveObject] Distance ${distance2.toFixed(2)}m <= trigger ${this.triggerDistance}m - Triggering!`);
       this.onPlayerApproach();
     }
@@ -7985,6 +8078,12 @@ var InteractiveObject = class extends Component31 {
   onPlayerApproach() {
     if (this.isTriggered || this.hasBeenPlayed)
       return;
+    if (window.interactionManager) {
+      if (!window.interactionManager.requestInteraction(this)) {
+        console.log("[InteractiveObject] Interaction blocked - another video is playing");
+        return;
+      }
+    }
     this.isTriggered = true;
     this.isPlaying = true;
     console.log("[InteractiveObject] Player approached - triggering interaction");
@@ -8038,19 +8137,27 @@ var InteractiveObject = class extends Component31 {
     console.log("[InteractiveObject] Video ended");
     this.isPlaying = false;
     this.hasBeenPlayed = true;
+    if (window.interactionManager) {
+      window.interactionManager.endInteraction(this);
+    }
     if (this.ambientAudioComponent) {
       console.log("[InteractiveObject] Fading ambient audio back in");
       this.ambientAudioComponent.fadeIn();
     }
-    if (this.videoWallComponent && this.videoWallComponent.video) {
-      this.videoWallComponent.video.pause();
-      this.videoWallComponent.video.currentTime = 0;
-      if (this.originalVideoUrl) {
-        this.videoWallComponent.videoUrl = this.originalVideoUrl;
-        this.videoWallComponent.video.src = this.originalVideoUrl;
-        this.originalVideoUrl = null;
+    if (this.videoWallComponent) {
+      if (this.videoWallComponent.stopVideo) {
+        this.videoWallComponent.stopVideo();
+        console.log("[InteractiveObject] Video stopped using stopVideo method");
+      } else if (this.videoWallComponent.video) {
+        this.videoWallComponent.video.pause();
+        this.videoWallComponent.video.currentTime = 0;
+        if (this.originalVideoUrl) {
+          this.videoWallComponent.videoUrl = this.originalVideoUrl;
+          this.videoWallComponent.video.src = this.originalVideoUrl;
+          this.originalVideoUrl = null;
+        }
+        console.log("[InteractiveObject] Video stopped and reset (legacy)");
       }
-      console.log("[InteractiveObject] Video stopped and reset");
     }
     this.deactivateSpotlight();
     this.disappearProgress = 0;
@@ -8128,34 +8235,52 @@ var InteractiveObject = class extends Component31 {
   startVideo() {
     console.log("[InteractiveObject] Starting video playback");
     if (this.videoWallComponent) {
-      if (this.videoUrl && this.videoUrl.length > 0) {
-        console.log(`[InteractiveObject] Overriding video URL to: ${this.videoUrl}`);
-        this.originalVideoUrl = this.videoWallComponent.videoUrl;
-        this.videoWallComponent.videoUrl = this.videoUrl;
-        if (this.videoWallComponent.video) {
-          this.videoWallComponent.video.src = this.videoUrl;
-          this.videoWallComponent.video.load();
-        }
-      }
-      if (this.videoWallComponent.video) {
-        const playVideo = () => {
-          this.videoWallComponent.video.currentTime = 0;
-          this.videoWallComponent.video.play().then(() => {
-            console.log(`[InteractiveObject] Video playing in ${this.room} room`);
-            if (!this.videoWallComponent.updateLoopStarted) {
-              this.videoWallComponent.startUpdateLoop();
-            }
-          }).catch((err) => {
-            console.error("[InteractiveObject] Failed to start video:", err);
-          });
-        };
-        if (this.videoWallComponent.video.readyState >= 2) {
-          playVideo();
-        } else {
-          this.videoWallComponent.video.addEventListener("loadeddata", playVideo, { once: true });
-        }
+      const videoUrl = this.videoUrl || this.videoWallComponent.videoUrl;
+      const roomValues = ["left", "right", "both"];
+      const roomString = roomValues[this.room] || "left";
+      if (this.videoWallComponent.playVideo) {
+        console.log(`[InteractiveObject] Playing video in ${roomString} room: ${videoUrl}`);
+        this.videoWallComponent.playVideo(videoUrl, roomString);
       } else {
-        console.error("[InteractiveObject] VideoWallTiled component has no video element");
+        console.warn("[InteractiveObject] VideoWallTiled component missing playVideo method, using legacy approach");
+        if (this.videoUrl && this.videoUrl.length > 0) {
+          console.log(`[InteractiveObject] Overriding video URL to: ${this.videoUrl}`);
+          this.originalVideoUrl = this.videoWallComponent.videoUrl;
+          this.videoWallComponent.videoUrl = this.videoUrl;
+          if (this.videoWallComponent.video) {
+            this.videoWallComponent.video.src = this.videoUrl;
+            this.videoWallComponent.video.load();
+          }
+        }
+        if (this.videoWallComponent.video) {
+          const playVideo = () => {
+            if (this.videoWallComponent.video.currentTime > 0 && !this.videoWallComponent.video.paused) {
+              console.log("[InteractiveObject] Stopping previous video before starting new one");
+              this.videoWallComponent.video.pause();
+            }
+            this.videoWallComponent.video.currentTime = 0;
+            this.videoWallComponent.video.play().then(() => {
+              console.log(`[InteractiveObject] Video playing in ${this.room} room`);
+              if (!this.videoWallComponent.updateLoopStarted) {
+                this.videoWallComponent.startUpdateLoop();
+              }
+            }).catch((err) => {
+              console.error("[InteractiveObject] Failed to start video:", err);
+              if (window.interactionManager) {
+                window.interactionManager.endInteraction(this);
+              }
+              this.isPlaying = false;
+              this.isTriggered = false;
+            });
+          };
+          if (this.videoWallComponent.video.readyState >= 2) {
+            playVideo();
+          } else {
+            this.videoWallComponent.video.addEventListener("loadeddata", playVideo, { once: true });
+          }
+        } else {
+          console.error("[InteractiveObject] VideoWallTiled component has no video element");
+        }
       }
       console.log("[InteractiveObject] Video controller activated", {
         room: this.room,
@@ -8184,8 +8309,21 @@ var InteractiveObject = class extends Component31 {
     this.isPlaying = false;
     this.hasBeenPlayed = false;
     this.disappearProgress = 0;
+    this.videoEndTime = 0;
     this.object.setScalingLocal(this.originalScale);
     this.object.setPositionLocal(this.originalPosition);
+  }
+  // Called when this interaction is interrupted by another
+  interrupt() {
+    console.log("[InteractiveObject] Interaction interrupted:", this.object.name);
+    this.isPlaying = false;
+    this.isTriggered = false;
+    this.videoEndTime = 0;
+    if (this.videoWallComponent && this.videoWallComponent.video) {
+      this.videoWallComponent.video.pause();
+      this.videoWallComponent.video.currentTime = 0;
+    }
+    this.deactivateSpotlight();
   }
 };
 __publicField(InteractiveObject, "TypeName", "interactive-object");
@@ -8209,8 +8347,8 @@ __publicField(InteractiveObject, "Properties", {
 });
 
 // js/light-fade-controller.js
-import { Component as Component32, Property as Property5 } from "@wonderlandengine/api";
-var LightFadeController = class extends Component32 {
+import { Component as Component33, Property as Property5 } from "@wonderlandengine/api";
+var LightFadeController = class extends Component33 {
   init() {
     this.lightComponent = null;
     this.isFading = false;
@@ -8448,8 +8586,8 @@ __publicField(LightFadeController, "Properties", {
 });
 
 // js/opacity-controller.js
-import { Component as Component33, Property as Property6 } from "@wonderlandengine/api";
-var OpacityController = class extends Component33 {
+import { Component as Component34, Property as Property6 } from "@wonderlandengine/api";
+var OpacityController = class extends Component34 {
   init() {
     this.currentOpacity = this.initialOpacity;
     this.targetOpacity = this.initialOpacity;
@@ -8656,35 +8794,44 @@ __publicField(OpacityController, "Properties", {
 });
 
 // js/video-wall-tiled.js
-import { Component as Component34, Property as Property7, MeshComponent as MeshComponent3 } from "@wonderlandengine/api";
-var VideoWallTiled = class extends Component34 {
+import { Component as Component35, Property as Property7, MeshComponent as MeshComponent3 } from "@wonderlandengine/api";
+var VideoWallTiled = class extends Component35 {
   init() {
     this.video = null;
     this.tiles = [];
     this.updateCount = 0;
     this.materials = [];
     this.updateLoopStarted = false;
+    this.currentRoom = "left";
+    this.leftMaterials = [];
+    this.rightMaterials = [];
     this.playAfterUserGesture = this.playAfterUserGesture.bind(this);
   }
   start() {
     console.log("[VideoWallTiled] Starting tiled video wall system");
-    this.materials = [this.material1, this.material2, this.material3].filter((m) => m !== null);
+    this.leftMaterials = [this.material1, this.material2, this.material3].filter((m) => m !== null);
+    this.rightMaterials = [this.rightMaterial1, this.rightMaterial2, this.rightMaterial3].filter((m) => m !== null);
     console.log("[VideoWallTiled] Material configuration:", {
-      material1: this.material1 ? "assigned" : "missing",
-      material2: this.material2 ? "assigned" : "missing",
-      material3: this.material3 ? "assigned" : "missing",
-      totalMaterials: this.materials.length
+      leftRoom: {
+        material1: this.material1 ? "assigned" : "missing",
+        material2: this.material2 ? "assigned" : "missing",
+        material3: this.material3 ? "assigned" : "missing",
+        total: this.leftMaterials.length
+      },
+      rightRoom: {
+        material1: this.rightMaterial1 ? "assigned" : "missing",
+        material2: this.rightMaterial2 ? "assigned" : "missing",
+        material3: this.rightMaterial3 ? "assigned" : "missing",
+        total: this.rightMaterials.length
+      }
     });
+    this.materials = this.leftMaterials;
     this.tileCount = Math.ceil(this.videoWidth / this.tileWidth);
     console.log(`[VideoWallTiled] Will create ${this.tileCount} tiles of ${this.tileWidth}px each`);
-    if (this.materials.length === 0) {
-      console.error("[VideoWallTiled] No materials assigned");
-      console.log("[VideoWallTiled] Please assign material1, material2, and material3 for each tile segment");
+    if (this.leftMaterials.length === 0 && this.rightMaterials.length === 0) {
+      console.error("[VideoWallTiled] No materials assigned for either room");
+      console.log("[VideoWallTiled] Please assign leftMaterial1-3 or rightMaterial1-3");
       return;
-    }
-    if (this.materials.length < this.tileCount) {
-      console.warn(`[VideoWallTiled] Only ${this.materials.length} materials assigned, need ${this.tileCount}`);
-      console.warn("[VideoWallTiled] Some tiles will not display video");
     }
     this.createVideoSource();
     this.createTiles();
@@ -8712,17 +8859,30 @@ var VideoWallTiled = class extends Component34 {
       this.onVideoReady();
     });
     this.video.addEventListener("error", (e) => {
-      console.error("[VideoWallTiled] Video error:", this.video.error);
+      const error = this.video.error;
+      console.error("[VideoWallTiled] Video error:", {
+        code: error?.code,
+        message: error?.message,
+        mediaError: {
+          MEDIA_ERR_ABORTED: error?.code === 1 ? "User aborted" : "",
+          MEDIA_ERR_NETWORK: error?.code === 2 ? "Network error" : "",
+          MEDIA_ERR_DECODE: error?.code === 3 ? "Decode error" : "",
+          MEDIA_ERR_SRC_NOT_SUPPORTED: error?.code === 4 ? "Source not supported" : ""
+        },
+        url: this.videoUrl,
+        readyState: this.video.readyState
+      });
     });
     this.video.load();
   }
   createTiles() {
     console.log("[VideoWallTiled] Creating tile system");
-    for (let i = 0; i < this.tileCount; i++) {
-      const sourceX = i * this.tileWidth;
-      const sourceWidth = Math.min(this.tileWidth, this.videoWidth - sourceX);
+    const tilesPerWall = 3;
+    const actualTileCount = this.currentRoom === "both" ? 6 : 3;
+    for (let i = 0; i < actualTileCount; i++) {
+      const tileIndexForSource = this.currentRoom === "both" ? i % tilesPerWall : i;
       const canvas2 = document.createElement("canvas");
-      canvas2.width = sourceWidth;
+      canvas2.width = this.tileWidth;
       canvas2.height = this.videoHeight;
       canvas2.style.display = "none";
       document.body.appendChild(canvas2);
@@ -8736,18 +8896,15 @@ var VideoWallTiled = class extends Component34 {
         ctx,
         texture: null,
         material: this.materials[i] || null,
-        sourceX,
-        sourceWidth,
         updateSuccessful: false
       };
       this.tiles.push(tile);
-      const materialName = i === 0 ? "material1" : i === 1 ? "material2" : "material3";
-      console.log(`[VideoWallTiled] Tile ${i} (${materialName}):`, {
-        sourceX,
-        sourceWidth,
+      const roomLabel = this.currentRoom === "both" ? i < 3 ? "left" : "right" : this.currentRoom;
+      const tileLabel = `${roomLabel}_tile${tileIndexForSource}`;
+      console.log(`[VideoWallTiled] Tile ${i} (${tileLabel}):`, {
         canvasSize: `${canvas2.width}x${canvas2.height}`,
         hasMaterial: !!tile.material,
-        materialAssigned: tile.material ? `Yes (${materialName})` : "No - tile will not display"
+        materialAssigned: tile.material ? "Yes" : "No - tile will not display"
       });
     }
   }
@@ -8765,18 +8922,29 @@ var VideoWallTiled = class extends Component34 {
         const texture = this.engine.textures.create(tile.canvas);
         if (texture) {
           tile.texture = texture;
-          if (tile.material[this.textureProperty] !== void 0) {
-            tile.material[this.textureProperty] = texture;
-            console.log(`[VideoWallTiled] Texture applied to material ${index}`);
-          } else {
-            const altProps = ["diffuseTexture", "flatTexture", "texture"];
-            for (const prop of altProps) {
+          const textureProps = [this.textureProperty, "diffuseTexture", "flatTexture", "texture"];
+          let applied = false;
+          for (const prop of textureProps) {
+            try {
               if (tile.material[prop] !== void 0) {
                 tile.material[prop] = texture;
-                console.log(`[VideoWallTiled] Texture applied to material ${index} using ${prop}`);
+                console.log(`[VideoWallTiled] Texture applied to tile ${index} material using '${prop}'`);
+                applied = true;
+                console.log(`[VideoWallTiled] Material ${index} info:`, {
+                  hasDiffuseTexture: tile.material.diffuseTexture !== void 0,
+                  hasFlatTexture: tile.material.flatTexture !== void 0,
+                  hasTexture: tile.material.texture !== void 0,
+                  pipeline: tile.material.pipeline?.name || "unknown"
+                });
                 break;
               }
+            } catch (e) {
+              console.warn(`[VideoWallTiled] Failed to set ${prop} on material ${index}:`, e);
             }
+          }
+          if (!applied) {
+            console.error(`[VideoWallTiled] Could not apply texture to material ${index} - no suitable property found`);
+            console.log(`[VideoWallTiled] Available material properties:`, Object.keys(tile.material));
           }
         } else {
           console.error(`[VideoWallTiled] Failed to create texture for tile ${index}`);
@@ -8839,31 +9007,67 @@ var VideoWallTiled = class extends Component34 {
       }
       lastUpdate = timestamp;
       if (this.video && !this.video.paused && !this.video.ended) {
+        const wallWidth = 7200;
+        const videoIsNarrow = this.video.videoWidth < wallWidth;
+        let offsetX = 0;
+        if (videoIsNarrow) {
+          offsetX = (wallWidth - this.video.videoWidth) / 2;
+          if (this.updateCount === 0) {
+            console.log(`[VideoWallTiled] Centering narrow video: ${this.video.videoWidth}px centered in ${wallWidth}px (offset: ${offsetX}px)`);
+          }
+        }
         this.tiles.forEach((tile) => {
           if (!tile.texture)
             return;
+          tile.ctx.fillStyle = "#000";
+          tile.ctx.fillRect(0, 0, tile.canvas.width, tile.canvas.height);
+          const effectiveTileIndex = this.currentRoom === "both" && tile.index >= 3 ? tile.index - 3 : tile.index;
+          const tileStartX = effectiveTileIndex * this.tileWidth;
+          const tileEndX = tileStartX + this.tileWidth;
+          const videoStartX = tileStartX - offsetX;
+          const videoEndX = tileEndX - offsetX;
+          if (videoEndX > 0 && videoStartX < this.video.videoWidth) {
+            const sourceX = Math.max(0, videoStartX);
+            const sourceEndX = Math.min(this.video.videoWidth, videoEndX);
+            const sourceWidth = sourceEndX - sourceX;
+            const destX = videoStartX < 0 ? Math.abs(videoStartX) : 0;
+            if (sourceWidth > 0) {
+              try {
+                tile.ctx.drawImage(
+                  this.video,
+                  sourceX,
+                  0,
+                  sourceWidth,
+                  this.video.videoHeight,
+                  // Source from video
+                  destX,
+                  0,
+                  sourceWidth,
+                  tile.canvas.height
+                  // Destination on canvas
+                );
+                if (this.updateCount === 0) {
+                  console.log(`[VideoWallTiled] Tile ${tile.index}: source(${sourceX}, ${sourceWidth}) -> dest(${destX}, ${sourceWidth})`);
+                }
+              } catch (e) {
+                if (this.updateCount === 0) {
+                  console.error(`[VideoWallTiled] Error drawing tile ${tile.index}:`, e);
+                }
+              }
+            }
+          }
           try {
-            tile.ctx.drawImage(
-              this.video,
-              tile.sourceX,
-              0,
-              tile.sourceWidth,
-              this.videoHeight,
-              // Source rectangle
-              0,
-              0,
-              tile.canvas.width,
-              tile.canvas.height
-              // Destination
-            );
-            if (tile.texture.update) {
+            if (tile.texture && tile.texture.update) {
               tile.texture.update(tile.canvas);
               tile.updateSuccessful = true;
-            } else if (tile.texture.upload) {
+            } else if (tile.texture && tile.texture.upload) {
               tile.texture.upload(tile.canvas);
               tile.updateSuccessful = true;
             } else {
               this.updateTextureDirectly(tile);
+              if (!tile.updateSuccessful && this.updateCount === 0) {
+                console.warn(`[VideoWallTiled] Tile ${tile.index} has no update method, trying fallback`);
+              }
             }
           } catch (e) {
             if (!tile.updateSuccessful && this.updateCount === 0) {
@@ -8905,6 +9109,121 @@ var VideoWallTiled = class extends Component34 {
       }
     }
   }
+  /**
+   * Play video in specific room(s)
+   * @param {string} videoUrl - URL of the video to play
+   * @param {string} room - Which room to play in: 'left', 'right', or 'both'
+   */
+  playVideo(videoUrl, room = "left") {
+    console.log(`[VideoWallTiled] Playing video in ${room} room(s): ${videoUrl}`);
+    if (this.video && !this.video.paused) {
+      this.video.pause();
+      this.updateLoopStarted = false;
+    }
+    this.currentRoom = room;
+    this.selectMaterialsForRoom(room);
+    if (videoUrl && this.videoUrl !== videoUrl) {
+      this.videoUrl = videoUrl;
+      if (this.video) {
+        this.video.src = videoUrl;
+        this.video.load();
+      }
+    }
+    if (this.video) {
+      this.video.play().then(() => {
+        console.log(`[VideoWallTiled] Video playing in ${room} room(s)`);
+        if (!this.updateLoopStarted) {
+          this.startUpdateLoop();
+        }
+      }).catch((e) => {
+        console.error("[VideoWallTiled] Failed to play video:", e);
+      });
+    }
+  }
+  /**
+   * Select materials based on room
+   */
+  selectMaterialsForRoom(room) {
+    console.log(`[VideoWallTiled] Selecting materials for room: ${room}`);
+    if (this.tiles.length > 0) {
+      this.tiles.forEach((tile) => {
+        if (tile.material && tile.material[this.textureProperty]) {
+          tile.material[this.textureProperty] = null;
+        }
+      });
+    }
+    switch (room) {
+      case "left":
+        this.materials = this.leftMaterials;
+        console.log(`[VideoWallTiled] Using LEFT materials:`, this.leftMaterials.length);
+        break;
+      case "right":
+        this.materials = this.rightMaterials;
+        console.log(`[VideoWallTiled] Using RIGHT materials:`, this.rightMaterials.length);
+        break;
+      case "both":
+        this.materials = [...this.leftMaterials, ...this.rightMaterials];
+        console.log(
+          `[VideoWallTiled] Using BOTH materials:`,
+          this.materials.length,
+          "(left:",
+          this.leftMaterials.length,
+          "right:",
+          this.rightMaterials.length,
+          ")"
+        );
+        break;
+      default:
+        console.warn(`[VideoWallTiled] Unknown room: ${room}, using left`);
+        this.materials = this.leftMaterials;
+    }
+    if (this.tiles.length > 0) {
+      this.updateTileMaterials();
+    }
+    console.log(`[VideoWallTiled] Active materials: ${this.materials.length}`);
+  }
+  /**
+   * Update tile materials after room change
+   */
+  updateTileMaterials() {
+    console.log(`[VideoWallTiled] Updating tile materials for room: ${this.currentRoom}`);
+    console.log(`[VideoWallTiled] Clearing existing tiles and recreating for ${this.currentRoom} room(s)`);
+    this.tiles.forEach((tile) => {
+      if (tile.canvas) {
+        tile.canvas.remove();
+      }
+    });
+    this.tiles = [];
+    if (this.currentRoom === "both") {
+      this.tileCount = 6;
+    } else {
+      this.tileCount = 3;
+    }
+    this.createTiles();
+    if (this.video && this.video.readyState >= 2) {
+      this.onVideoReady();
+    }
+  }
+  /**
+   * Stop video playback
+   */
+  stopVideo() {
+    console.log("[VideoWallTiled] Stopping video");
+    if (this.video) {
+      this.video.pause();
+      this.video.currentTime = 0;
+      this.updateLoopStarted = false;
+      this.tiles.forEach((tile) => {
+        if (tile.ctx) {
+          tile.ctx.fillStyle = "#000";
+          tile.ctx.fillRect(0, 0, tile.canvas.width, tile.canvas.height);
+          if (tile.texture && tile.texture.update) {
+            tile.texture.update(tile.canvas);
+          }
+        }
+      });
+    }
+  }
   onDestroy() {
     window.removeEventListener("click", this.playAfterUserGesture);
     window.removeEventListener("touchstart", this.playAfterUserGesture);
@@ -8922,12 +9241,17 @@ var VideoWallTiled = class extends Component34 {
 __publicField(VideoWallTiled, "TypeName", "video-wall-tiled");
 __publicField(VideoWallTiled, "Properties", {
   videoUrl: Property7.string("/static/video-7200.mp4"),
+  // Original material properties for backward compatibility
   material1: Property7.material(),
-  // First tile (0-2400px)
+  // First tile
   material2: Property7.material(),
-  // Second tile (2400-4800px)
+  // Second tile
   material3: Property7.material(),
-  // Third tile (4800-7200px)
+  // Third tile
+  // Additional materials for right room (optional)
+  rightMaterial1: Property7.material(),
+  rightMaterial2: Property7.material(),
+  rightMaterial3: Property7.material(),
   tileWidth: Property7.int(2400),
   videoWidth: Property7.int(7200),
   videoHeight: Property7.int(720),
@@ -8940,8 +9264,8 @@ __publicField(VideoWallTiled, "Properties", {
 });
 
 // js/vr-teleport-wrapper.js
-import { Component as Component35, Property as Property8 } from "@wonderlandengine/api";
-var VrTeleportWrapper = class extends Component35 {
+import { Component as Component36, Property as Property8 } from "@wonderlandengine/api";
+var VrTeleportWrapper = class extends Component36 {
   init() {
     this.isVrMode = false;
     this.teleportComp = null;
@@ -8992,8 +9316,8 @@ __publicField(VrTeleportWrapper, "Properties", {
 });
 
 // js/sky-sphere-controller-v2.js
-import { Component as Component36, Property as Property9 } from "@wonderlandengine/api";
-var SkySphereControllerV2 = class extends Component36 {
+import { Component as Component37, Property as Property9 } from "@wonderlandengine/api";
+var SkySphereControllerV2 = class extends Component37 {
   init() {
     this.currentState = "day";
     this.targetState = "day";
@@ -9318,6 +9642,7 @@ function js_default(engine) {
   engine.registerComponent(VrModeActiveSwitch);
   engine.registerComponent(AmbientAudio);
   engine.registerComponent(ExtendedWasdControls);
+  engine.registerComponent(InteractionManager);
   engine.registerComponent(InteractiveObject);
   engine.registerComponent(LightFadeController);
   engine.registerComponent(OpacityController);

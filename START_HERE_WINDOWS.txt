@@ -1,0 +1,101 @@
+==================================================
+        BIO-GEO-GRAFIE VR GALLERY
+==================================================
+
+WELCOME! This is an immersive VR art gallery.
+
+--------------------------------------------------
+HOW TO START (3 OPTIONS):
+--------------------------------------------------
+
+OPTION 1 - SIMPLEST (Recommended):
+   Double-click: BIO_GEO_GRAFIE_START.bat
+   
+OPTION 2 - WITH AUTO-INSTALL:
+   Double-click: INSTALL_AND_RUN.bat
+   (This will install Python if needed)
+
+OPTION 3 - MANUAL:
+   If you have Python installed:
+   1. Open Command Prompt here
+   2. Type: python -m http.server 8080
+   3. Open browser to: http://localhost:8080
+
+--------------------------------------------------
+WHAT YOU NEED:
+--------------------------------------------------
+
+- Windows 7 or newer
+- Modern web browser (Chrome/Firefox/Edge)
+- 4GB RAM minimum
+- For VR: Meta Quest 2 or compatible device
+
+--------------------------------------------------
+CONTROLS:
+--------------------------------------------------
+
+DESKTOP:
+- W/A/S/D = Move forward/left/back/right
+- Q/E = Move up/down
+- Mouse = Look around
+- Walk near objects to interact
+
+VR:
+- Physical movement
+- Look at and approach objects
+
+--------------------------------------------------
+TROUBLESHOOTING:
+--------------------------------------------------
+
+NOTHING HAPPENS:
+- Right-click the .bat file
+- Select "Run as administrator"
+
+BLACK SCREEN IN BROWSER:
+- Click anywhere on the page
+- Refresh the page (F5)
+- Check browser console (F12)
+
+SECURITY WARNING:
+- Windows may warn about unknown publisher
+- Click "More info" then "Run anyway"
+- This is safe - it's just starting a web server
+
+"PYTHON NOT FOUND":
+- Use INSTALL_AND_RUN.bat instead
+- Or install from: https://python.org
+
+CAN'T MOVE IN GALLERY:
+- Click on the browser window first
+- Make sure window has focus
+
+--------------------------------------------------
+FILES INCLUDED:
+--------------------------------------------------
+
+BIO_GEO_GRAFIE_START.bat - Main launcher
+INSTALL_AND_RUN.bat - Auto-install launcher
+RUN_GALLERY_WINDOWS.bat - Advanced launcher
+index.html - Gallery entry point
+*.wasm, *.js - Gallery engine files
+*.bin - 3D models and assets
+
+--------------------------------------------------
+NOTES:
+--------------------------------------------------
+
+- First launch may take 30 seconds to load
+- Videos are large - be patient while loading
+- Requires internet for first-time Python download
+- Gallery runs locally - no data is sent anywhere
+- Close the command window to stop the server
+
+--------------------------------------------------
+ENJOY THE EXPERIENCE!
+--------------------------------------------------
+
+For support or feedback:
+https://github.com/xWolgan/bio-geo-grafie
+
+==================================================

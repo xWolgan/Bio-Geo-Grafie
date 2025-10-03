@@ -1,0 +1,68 @@
+BIO-GEO-GRAFIE VR GALLERY - Mac Installation Guide
+===================================================
+
+QUICK START:
+-----------
+1. Double-click "BIO_GEO_GRAFIE_START.command" to run the gallery
+2. If it doesn't work, double-click "INSTALL_AND_RUN.command" first
+
+DETAILED INSTRUCTIONS:
+---------------------
+
+STEP 1: Make the scripts executable (First time only)
+------------------------------------------------------
+The .command files need permission to run. Do ONE of these:
+
+Option A: Using Finder (Easier)
+1. Right-click on "BIO_GEO_GRAFIE_START.command"
+2. Select "Open" (not double-click)
+3. Click "Open" in the security dialog
+4. Do the same for "INSTALL_AND_RUN.command"
+
+Option B: Using Terminal
+1. Open Terminal (find it in Applications > Utilities)
+2. Type: cd
+3. Drag the "deploy" folder into Terminal window
+4. Press Enter
+5. Type: chmod +x *.command
+6. Press Enter
+
+STEP 2: Run the Gallery
+-----------------------
+1. Double-click "BIO_GEO_GRAFIE_START.command"
+2. The gallery will open in your browser at http://localhost:8080
+3. To stop: Press Control+C in the Terminal window
+
+IF IT DOESN'T WORK:
+-------------------
+1. Double-click "INSTALL_AND_RUN.command"
+2. Follow the prompts to install Python 3
+3. Try "BIO_GEO_GRAFIE_START.command" again
+
+CONTROLS:
+---------
+- WASD keys: Move around
+- Mouse: Look around
+- Approach objects to interact
+- For VR: Connect your headset and click VR button
+
+TROUBLESHOOTING:
+---------------
+- If scripts won't open: See STEP 1 above
+- If "Permission denied": Use Terminal method in STEP 1
+- If server won't start: Install Python 3 from python.org
+- If browser doesn't open: Manually visit http://localhost:8080
+
+SYSTEM REQUIREMENTS:
+-------------------
+- macOS 10.10 or later
+- Any modern web browser (Safari, Chrome, Firefox)
+- Python 3 (will be installed if needed)
+
+SUPPORT:
+--------
+The gallery uses Python's built-in web server.
+No files are modified outside the deploy folder.
+To uninstall: Simply delete the deploy folder.
+
+Enjoy the Bio-geo-grafie VR Gallery experience!

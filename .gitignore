@@ -1,4 +1,14 @@
-*.mp4 
-*.avi 
-*.mov 
-nul 
+# Videos are hosted on R2
+*.mp4
+*.mov
+*.webm
+*.avi
+
+# Wrangler local dev files
+.wrangler/
+
+# Node modules
+node_modules/
+
+# Test files
+test-*.mp4
