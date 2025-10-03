@@ -16,3 +16,7 @@ node_modules/
 
 # Test files
 test-*.mp4
+
+# Large sky images
+images/daysky_HD.png
+images/nightsky_HD.png
