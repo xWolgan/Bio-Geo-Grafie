@@ -1,0 +1,2 @@
+# No redirects - serve all files as-is
+# This file ensures Cloudflare Pages doesn't redirect anything
