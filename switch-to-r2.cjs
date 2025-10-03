@@ -15,17 +15,24 @@ console.log('🔄 Switching to R2 mode for deployment...\n');
 // Read the app.js file
 let content = fs.readFileSync(APP_FILE, 'utf8');
 
-// Replace local .bin path with R2 URL
+// Replace local .bin path with R2 URL, but use loadMainSceneFromBuffer
+// This allows scene from R2 while bundle stays on Cloudflare Pages
 const originalLine = `await engine.loadMainScene(\`\${Constants.ProjectName}.bin\`);`;
-const r2Line = `await engine.loadMainScene(\`${R2_BASE_URL}\${Constants.ProjectName}.bin\`);`;
+const r2Line = `await engine.loadMainSceneFromBuffer(
+    await (await fetch(\`${R2_BASE_URL}\${Constants.ProjectName}.bin\`)).arrayBuffer(),
+    \`\${Constants.ProjectName}.bin\`,
+    {
+      baseURL: window.location.origin + '/'
+    }
+  );`;
 
 if (content.includes(originalLine)) {
   content = content.replace(originalLine, r2Line);
   fs.writeFileSync(APP_FILE, content);
   console.log('✅ Updated MyWonderland-app.js');
-  console.log(`   Old: \${Constants.ProjectName}.bin`);
-  console.log(`   New: ${R2_BASE_URL}\${Constants.ProjectName}.bin`);
-} else if (content.includes(r2Line)) {
+  console.log(`   Old: loadMainScene(\${Constants.ProjectName}.bin)`);
+  console.log(`   New: loadMainSceneFromBuffer with R2 URL and local baseURL`);
+} else if (content.includes('loadMainSceneFromBuffer')) {
   console.log('ℹ️  Already in R2 mode - no changes needed');
 } else {
   console.log('❌ Could not find the loadMainScene line to replace!');

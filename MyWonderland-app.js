@@ -44,7 +44,13 @@ if (document.readyState === "loading") {
   setupButtonsXR();
 }
 try {
-  await engine.loadMainScene(`https://pub-c6ac418601d24ff1b2b716ad48afc9ce.r2.dev/${Constants.ProjectName}.bin`);
+  await engine.loadMainSceneFromBuffer(
+    await (await fetch(`https://pub-c6ac418601d24ff1b2b716ad48afc9ce.r2.dev/${Constants.ProjectName}.bin`)).arrayBuffer(),
+    `${Constants.ProjectName}.bin`,
+    {
+      baseURL: window.location.origin + '/'
+    }
+  );
 } catch (e) {
   console.error(e);
   window.alert(`Failed to load ${Constants.ProjectName}.bin:`, e);

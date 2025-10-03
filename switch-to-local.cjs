@@ -15,16 +15,16 @@ console.log('🔄 Switching to LOCAL mode for development...\n');
 // Read the app.js file
 let content = fs.readFileSync(APP_FILE, 'utf8');
 
-// Replace R2 URL with local path
-const r2Line = `await engine.loadMainScene(\`${R2_BASE_URL}\${Constants.ProjectName}.bin\`);`;
+// Replace R2 loadMainSceneFromBuffer with local loadMainScene
+const r2Pattern = /await engine\.loadMainSceneFromBuffer\([\s\S]*?\);/;
 const localLine = `await engine.loadMainScene(\`\${Constants.ProjectName}.bin\`);`;
 
-if (content.includes(r2Line)) {
-  content = content.replace(r2Line, localLine);
+if (r2Pattern.test(content)) {
+  content = content.replace(r2Pattern, localLine);
   fs.writeFileSync(APP_FILE, content);
   console.log('✅ Updated MyWonderland-app.js');
-  console.log(`   Old: ${R2_BASE_URL}\${Constants.ProjectName}.bin`);
-  console.log(`   New: \${Constants.ProjectName}.bin`);
+  console.log(`   Old: loadMainSceneFromBuffer with R2 URL`);
+  console.log(`   New: loadMainScene(\${Constants.ProjectName}.bin)`);
 } else if (content.includes(localLine)) {
   console.log('ℹ️  Already in LOCAL mode - no changes needed');
 } else {
