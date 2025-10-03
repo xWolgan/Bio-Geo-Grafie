@@ -46,8 +46,7 @@ if (document.readyState === "loading") {
 try {
   await engine.loadMainSceneFromBuffer({
     buffer: await (await fetch(`https://pub-c6ac418601d24ff1b2b716ad48afc9ce.r2.dev/${Constants.ProjectName}.bin`)).arrayBuffer(),
-    filename: `${Constants.ProjectName}.bin`,
-    baseURL: window.location.origin + '/'
+    filename: `${Constants.ProjectName}.bin`
   });
 } catch (e) {
   console.error(e);
