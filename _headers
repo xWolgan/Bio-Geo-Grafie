@@ -1,0 +1,29 @@
+/*
+  Access-Control-Allow-Origin: *
+
+/*.js
+  Content-Type: application/javascript
+
+/*.wasm
+  Content-Type: application/wasm
+
+/*.bin
+  Content-Type: application/octet-stream
+
+/*.glb
+  Content-Type: model/gltf-binary
+
+/*.gltf
+  Content-Type: model/gltf+json
+
+/*.mp4
+  Content-Type: video/mp4
+
+/*.png
+  Content-Type: image/png
+
+/*.jpg
+  Content-Type: image/jpeg
+
+/*.webp
+  Content-Type: image/webp
